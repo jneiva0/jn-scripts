@@ -35,7 +35,12 @@ log() {
 
 # Function to handle errors
 error() {
-    echo -e "${RD}[ERROR]${CL} $1" >&2
+    local timestamp
+    timestamp=$(date +'%Y-%m-%d %H:%M:%S')
+    echo -e "\n${RD}[ERROR] $timestamp${CL}"
+    echo -e "${RD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
+    echo -e "${RD}$1${CL}"
+    echo -e "${RD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}\n"
     exit 1
 }
 
@@ -455,3 +460,4 @@ main() {
 
 # Run the main function
 main "$@"
+
