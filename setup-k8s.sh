@@ -8,8 +8,8 @@ BL="\033[36m"
 RD="\033[01;31m"
 GN="\033[1;92m"
 CL="\033[m"
-# CROSS="${RD}✗${CL}"
 CHECK="${GN}✓${CL}"
+CROSS="${RD}✗${CL}"
 
 # Function to display header
 header_info() {
@@ -30,17 +30,14 @@ EOF
 
 # Function to log messages
 log() {
-    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] ${GN}$1${CL}"
+    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] ${GN}$1${CL}" >> /tmp/k8s_setup.log
 }
 
 # Function to handle errors
 error() {
-    local timestamp
-    timestamp=$(date +'%Y-%m-%d %H:%M:%S')
-    echo -e "\n${RD}[ERROR] $timestamp${CL}"
-    echo -e "${RD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
-    echo -e "${RD}$1${CL}"
-    echo -e "${RD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}\n"
+    local timestamp=$(date +'%Y-%m-%d %H:%M:%S')
+    echo -e "\n${RD}[ERROR] $timestamp${CL}" >> /tmp/k8s_setup.log
+    echo -e "${RD}$1${CL}" >> /tmp/k8s_setup.log
     exit 1
 }
 
@@ -373,6 +370,9 @@ main() {
         error "This script must be run as root"
     fi
 
+    # Initialize log file
+    true > /tmp/k8s_setup.log
+
     # Update and install required packages
     log "Updating package list and installing required packages..."
     apt-get update && apt-get install -y whiptail || error "Failed to update or install packages"
@@ -456,6 +456,21 @@ main() {
     echo -e "${YW}To initialize the cluster and install CNI, follow the guide at:${CL}"
     echo -e "${GN}https://github.com/lokeshjyo01/kubernetes-v1.30.2-cluster-using-kubeadm/blob/main/README.md#step-10-initialize-the-cluster-and-install-cni${CL}"
 
+    # Print summary
+    clear
+    echo -e "${BL}Kubernetes Setup Summary:${CL}"
+    echo -e "${YW}----------------------------------------${CL}"
+    grep -E '^\[.*\]' /tmp/k8s_setup.log | sed 's/\[//' | sed 's/\]//' | while read -r line; do
+        if [[ $line == *"ERROR"* ]]; then
+            echo -e "${CROSS} ${line}"
+        else
+            echo -e "${CHECK} ${line}"
+        fi
+    done
+    echo -e "${YW}----------------------------------------${CL}"
+
+    # Clean up log file
+    rm /tmp/k8s_setup.log
 }
 
 # Run the main function
