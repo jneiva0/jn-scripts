@@ -10,7 +10,6 @@ By deploying a service and timer to the systemd directory, it ensures that local
 - Downloads the `.service` and `.timer` files from the repository. Code source originated from here: https://github.com/tailscale/tailscale/issues/1227#issuecomment-2166650995
 - Places the files in the `/etc/systemd/system` directory on a Debian/Ubuntu (systemd) system.
 - Enables and starts the systemd service and timer.
-- Cleans up after itself once the deployment is complete.
 
 ## How to use:
 
