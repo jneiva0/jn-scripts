@@ -94,7 +94,7 @@ install_whiptail() {
 # Main deploy function
 deploy() {
   header_info
-
+  root_check
   install_whiptail
 
   # Prepare the message for the whiptail dialog
@@ -110,8 +110,6 @@ Do you want to proceed with the installation?"
     log "User chose not to proceed. Exiting."
     exit 0
   fi
-
-  root_check
 
   if ! command -v tailscale &>/dev/null; then
     error "Tailscale is not installed. Please install Tailscale before running this script."
