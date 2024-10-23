@@ -15,7 +15,7 @@ CROSS="${RD}✗${CL}"
 header_info() {
   clear
   cat <<"EOF"
-⠀⠀⢀⣀⠤⠿⢤⢖⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢀⣀⠤⠿⢤⢖⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⡔⢩⠂⠀⠒⠗⠈⠀⠉⠢⠄⣀⠠⠤⠄⠒⢖⡒⢒⠂⠤⢄⠀⠀⠀⠀
 ⠇⠤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠈⠀⠈⠈⡨⢀⠡⡪⠢⡀⠀
 ⠈⠒⠀⠤⠤⣄⡆⡂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠢⠀⢕⠱⠀
@@ -47,9 +47,55 @@ root_check() {
   fi
 }
 
+# Function to detect package manager
+detect_pkg_manager() {
+  if command -v apt-get &>/dev/null; then
+    echo "apt-get"
+  elif command -v yum &>/dev/null; then
+    echo "yum"
+  elif command -v dnf &>/dev/null; then
+    echo "dnf"
+  elif command -v pacman &>/dev/null; then
+    echo "pacman"
+  else
+    error "No supported package manager found. Please install 'whiptail' manually."
+  fi
+}
+
+# Function to install whiptail
+install_whiptail() {
+  log "Checking for 'whiptail'..."
+  if ! command -v whiptail &>/dev/null; then
+    log "'whiptail' not found. Attempting to install..."
+    PKG_MANAGER=$(detect_pkg_manager)
+    case "$PKG_MANAGER" in
+    apt-get)
+      apt-get update && apt-get install -y whiptail || error "Failed to install 'whiptail' using apt-get."
+      ;;
+    yum)
+      yum install -y newt || error "Failed to install 'whiptail' (newt package) using yum."
+      ;;
+    dnf)
+      dnf install -y newt || error "Failed to install 'whiptail' (newt package) using dnf."
+      ;;
+    pacman)
+      pacman -Sy --noconfirm newt || error "Failed to install 'whiptail' (newt package) using pacman."
+      ;;
+    *)
+      error "Unsupported package manager: $PKG_MANAGER"
+      ;;
+    esac
+    log "'whiptail' installed successfully."
+  else
+    log "'whiptail' is already installed."
+  fi
+}
+
 # Main deploy function
 deploy() {
   header_info
+
+  install_whiptail
 
   # Prepare the message for the whiptail dialog
   INFO_MESSAGE="This script automates the deployment of a fix for an issue where a Tailscale node becomes inaccessible from the local LAN when Tailscale is configured with 'accept-routes=true' and routes that point back to the LAN where the node is deployed are present in tailscale.
@@ -58,7 +104,7 @@ By deploying a service and timer to the systemd directory, it ensures that local
 
 Do you want to proceed with the installation?"
 
-  if (whiptail --backtitle "Capivara Scripts" --title "Tailscale LAN Connectivity Fix" --yesno "$INFO_MESSAGE" 16 78); then
+  if whiptail --backtitle "Capivara Scripts" --title "Tailscale LAN Connectivity Fix" --yesno "$INFO_MESSAGE" 16 78; then
     log "User chose to proceed. Continuing with installation."
   else
     log "User chose not to proceed. Exiting."
@@ -68,7 +114,7 @@ Do you want to proceed with the installation?"
   root_check
 
   if ! command -v tailscale &>/dev/null; then
-    error "Tailscale is not installed"
+    error "Tailscale is not installed. Please install Tailscale before running this script."
   fi
 
   # Variables
@@ -79,8 +125,8 @@ Do you want to proceed with the installation?"
 
   # Download the service and timer files from the repository
   log "Downloading service and timer files..."
-  curl -fsSL -o "$SERVICE_FILE" "$REPO_URL/$SERVICE_FILE" || error "Failed to download $SERVICE_FILE"
-  curl -fsSL -o "$TIMER_FILE" "$REPO_URL/$TIMER_FILE" || error "Failed to download $TIMER_FILE"
+  curl -fsSL -o "$SERVICE_FILE" "$REPO_URL/$SERVICE_FILE" || error "Failed to download $SERVICE_FILE from $REPO_URL"
+  curl -fsSL -o "$TIMER_FILE" "$REPO_URL/$TIMER_FILE" || error "Failed to download $TIMER_FILE from $REPO_URL"
   log "Downloaded service and timer files."
 
   # Move the files to the systemd directory
