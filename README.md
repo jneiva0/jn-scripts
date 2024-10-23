@@ -32,7 +32,7 @@ This will:
 To uninstall run the following command:
 
 ```bash
-curl -sS https://github.com/jneiva0/jn-scripts/raw/main/tailscale/uninstall.sh | sudo bash
+bash -c "$(wget -qO - https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale/uninstall.sh)"
 ```
 
 This will:
