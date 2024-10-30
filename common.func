@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+# Color definitions
+YW="\033[33m"
+BL="\033[36m"
+RD="\033[01;31m"
+GN="\033[1;92m"
+CL="\033[m"
+CHECK="${GN}✓${CL}"
+CROSS="${RD}✗${CL}"
+
+# Function to display header
+header_info() {
+  clear
+  cat <<"EOF"
+⠀⠀⠀⢀⣀⠤⠿⢤⢖⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⡔⢩⠂⠀⠒⠗⠈⠀⠉⠢⠄⣀⠠⠤⠄⠒⢖⡒⢒⠂⠤⢄⠀⠀⠀⠀
+⠇⠤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠈⠀⠈⠈⡨⢀⠡⡪⠢⡀⠀
+⠈⠒⠀⠤⠤⣄⡆⡂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠢⠀⢕⠱⠀
+⠀⠀⠀⠀⠀⠈⢳⣐⡐⠐⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠁⠇
+⠀⠀⠀⠀⠀⠀⠀⠑⢤⢁⠀⠆⠀⠀⠀⠀⠀⢀⢰⠀⠀⠀⡀⢄⡜⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠘⡦⠄⡷⠢⠤⠤⠤⠤⢬⢈⡇⢠⣈⣰⠎⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣃⢸⡇⠀⠀⠀⠀⠀⠈⢪⢀⣺⡅⢈⠆⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠶⡿⠤⠚⠁⠀⠀⠀⢀⣠⡤⢺⣥⠟⢡⠃⠀⠀⠀
+EOF
+}
+
+# Function to log messages
+log() {
+  echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] ${GN}$1${CL}"
+}
+
+# Function to handle errors
+error() {
+  echo -e "\n${RD}[ERROR] $(date +'%Y-%m-%d %H:%M:%S')${CL}"
+  echo -e "${RD}$1${CL}"
+  exit 1
+}
+
+# Function to check if running as root
+root_check() {
+  if [[ $EUID -ne 0 ]]; then
+    error "This script must be run as root"
+  fi
+}
+
+# Function to detect package manager
+detect_pkg_manager() {
+  if command -v apt-get &>/dev/null; then
+    echo "apt-get"
+  elif command -v yum &>/dev/null; then
+    echo "yum"
+  elif command -v dnf &>/dev/null; then
+    echo "dnf"
+  elif command -v pacman &>/dev/null; then
+    echo "pacman"
+  else
+    error "No supported package manager found. Please install 'whiptail' manually."
+  fi
+}
+
+# Function to install whiptail
+install_whiptail() {
+  log "Checking for 'whiptail'..."
+  if ! command -v whiptail &>/dev/null; then
+    log "'whiptail' not found. Attempting to install..."
+    PKG_MANAGER=$(detect_pkg_manager)
+    case "$PKG_MANAGER" in
+    apt-get)
+      apt-get update && apt-get install -y whiptail || error "Failed to install 'whiptail' using apt-get."
+      ;;
+    yum)
+      yum install -y newt || error "Failed to install 'whiptail' (newt package) using yum."
+      ;;
+    dnf)
+      dnf install -y newt || error "Failed to install 'whiptail' (newt package) using dnf."
+      ;;
+    pacman)
+      pacman -Sy --noconfirm newt || error "Failed to install 'whiptail' (newt package) using pacman."
+      ;;
+    *)
+      error "Unsupported package manager: $PKG_MANAGER"
+      ;;
+    esac
+    log "'whiptail' installed successfully."
+  else
+    log "'whiptail' is already installed."
+  fi
+}

@@ -1,48 +1,9 @@
 #!/usr/bin/env bash
 
-# Color definitions
-YW="\033[33m"
-BL="\033[36m"
-RD="\033[01;31m"
-GN="\033[1;92m"
-CL="\033[m"
-CHECK="${GN}✓${CL}"
-CROSS="${RD}✗${CL}"
-
-# Function to display header
-header_info() {
-  clear
-  cat <<"EOF"
-⠀⠀⠀⢀⣀⠤⠿⢤⢖⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⡔⢩⠂⠀⠒⠗⠈⠀⠉⠢⠄⣀⠠⠤⠄⠒⢖⡒⢒⠂⠤⢄⠀⠀⠀⠀
-⠇⠤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠈⠀⠈⠈⡨⢀⠡⡪⠢⡀⠀
-⠈⠒⠀⠤⠤⣄⡆⡂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠢⠀⢕⠱⠀
-⠀⠀⠀⠀⠀⠈⢳⣐⡐⠐⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠁⠇
-⠀⠀⠀⠀⠀⠀⠀⠑⢤⢁⠀⠆⠀⠀⠀⠀⠀⢀⢰⠀⠀⠀⡀⢄⡜⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠘⡦⠄⡷⠢⠤⠤⠤⠤⢬⢈⡇⢠⣈⣰⠎⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⣃⢸⡇⠀⠀⠀⠀⠀⠈⢪⢀⣺⡅⢈⠆⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠶⡿⠤⠚⠁⠀⠀⠀⢀⣠⡤⢺⣥⠟⢡⠃⠀⠀⠀
-EOF
-  echo -e "\n${BL}Tailscale LAN Connectivity Fix${CL}\n"
-}
-
-# Function to log messages
-log() {
-  echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] ${GN}$1${CL}"
-}
-
-# Function to handle errors
-error() {
-  echo -e "\n${RD}[ERROR] $(date +'%Y-%m-%d %H:%M:%S')${CL}"
-  echo -e "${RD}$1${CL}"
+# Source the common utility script from the repository
+source <(curl -fsSL https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale/common.func) || {
+  echo "Failed to load common functions."
   exit 1
-}
-
-# Function to check if running as root
-root_check() {
-  if [[ $EUID -ne 0 ]]; then
-    error "This script must be run as root"
-  fi
 }
 
 undeploy() {
@@ -50,7 +11,22 @@ undeploy() {
 
   root_check
 
-  # Variables
+  install_whiptail
+
+  # Prepare the message for the whiptail dialog
+  INFO_MESSAGE="This script will uninstall the Tailscale LAN connectivity fix, stopping and removing all related services and timers.
+
+Do you want to proceed with the uninstallation?"
+
+  # Display confirmation using whiptail
+  if whiptail --backtitle "Capivara Scripts" --title "Uninstall Tailscale LAN Connectivity Fix" --yesno "$INFO_MESSAGE" 16 78; then
+    log "User chose to proceed. Continuing with uninstallation."
+  else
+    log "User chose not to proceed. Exiting."
+    exit 0
+  fi
+
+  REPO_URL="https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale"
   SERVICE_FILE="tailscale-directconnect-routes.service"
   TIMER_FILE="tailscale-directconnect-routes.timer"
   SYSTEMD_DIR="/etc/systemd/system"
