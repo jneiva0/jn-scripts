@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Source the common utility script from the repository
-source <(curl -fsSL https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale/common.func) || {
+source <(curl -fsSL https://raw.githubusercontent.com/jneiva0/jn-scripts/main/common.func) || {
   echo "Failed to load common functions."
   exit 1
 }
@@ -26,7 +26,7 @@ Do you want to proceed with the uninstallation?"
     exit 0
   fi
 
-  REPO_URL="https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale"
+  # REPO_URL="https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale"
   SERVICE_FILE="tailscale-directconnect-routes.service"
   TIMER_FILE="tailscale-directconnect-routes.timer"
   SYSTEMD_DIR="/etc/systemd/system"

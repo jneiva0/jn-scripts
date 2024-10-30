@@ -10,16 +10,10 @@ This script automates the deployment of a fix for an issue where a Tailscale nod
 
 To deploy the fix, run the following command on your Debian/Ubuntu (systemd) machine:
 
--   **With Prompt:**
+```bash
+bash -c "$(wget -qO - https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale/deploy.sh)"
+```
 
-    ```bash
-    bash -c "$(wget -qO - https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale/deploy.sh)"
-    ```
-
--   **Non-Interactive Mode (Auto-Yes):**
-
-    ```bash
-    `bash -c "$(wget -qO - https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale/deploy.sh)" --yes`
 
 ## How it works:
 - Downloads the `.service` and `.timer` files from the repository. Code source originated from here: https://github.com/tailscale/tailscale/issues/1227#issuecomment-2166650995
@@ -38,7 +32,8 @@ This will:
 To uninstall run the following command:
 
 ```bash
-curl -sS https://github.com/jneiva0/jn-scripts/raw/main/tailscale/uninstall.sh | sudo bash
+bash -c "$(wget -qO - https://raw.githubusercontent.com/jneiva0/jn-scripts/main/tailscale/uninstall.sh)"
+
 ```
 
 This will:
@@ -49,7 +44,5 @@ This will:
 ## TODO
 
 - [ ] Add prerequisite check mentioning Tailscale installation requirement
-- [ ] Document minimum required Tailscale version
-- [ ] Add link to official Tailscale installation docs
-- [ ] Test the uninstall script
+- [ ] Add non-interactive mode for automated install in CI/CD
 - [ ] Check the script is idempotent
